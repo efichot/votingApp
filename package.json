@@ -33,5 +33,9 @@
     "web3": "^0.18.4",
     "webpack": "^2.7.0",
     "webpack-dev-server": "^2.9.1"
+  },
+  "dependencies": {
+    "file-system": "^2.2.2",
+    "solc": "^0.4.17"
   }
 }

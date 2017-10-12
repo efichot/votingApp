@@ -1,90 +1,52 @@
 // Import the page's CSS. Webpack will know what to do with it.
-import "../stylesheets/app.css";
+import '../stylesheets/app.css';
 
 // Import libraries we need.
 import { default as Web3} from 'web3';
 import { default as contract } from 'truffle-contract'
-
 // Import our contract artifacts and turn them into usable abstractions.
-import metacoin_artifacts from '../../build/contracts/MetaCoin.json'
+import voting_artifacts from '../../build/contracts/Voting.json'
 
 // MetaCoin is our usable abstraction, which we'll use through the code below.
-var MetaCoin = contract(metacoin_artifacts);
+var Voting = contract(voting_artifacts);
 
 // The following code is simple to show off interacting with your contracts.
 // As your needs grow you will likely need to change its form and structure.
 // For application bootstrapping, check out window.addEventListener below.
-var accounts;
-var account;
+let candidateNames;
+const candidates = {
+    "Jose": "voteCandidate-1",
+    "Etienne": "voteCandidate-2",
+    "Nick": "voteCandidate-3",
+};
 
 window.App = {
-  start: function() {
-    var self = this;
+    start: () => {
+        Voting.setProvider(web3.currentProvider);
+        console.log(code);
+        Voting.new(['jose','Etienne', 'Nick'], {from: web3.eth.accounts[0], gas: 420000}).then((voting) => {
+            console.log(voting.address);
+            candidateNames = Object.keys(candidates);
+            console.log(candidateNames);
+            for (let i = 0; i < candidateNames.length; i++) {
+                let name = candidateNames[i];
+                console.log(name);
+                let val = voting.totalVotesFor.call(name).toString();
+                $('#' + candidates[candidateNames[i]]).html(val);
+            }
 
-    // Bootstrap the MetaCoin abstraction for Use.
-    MetaCoin.setProvider(web3.currentProvider);
-
-    // Get the initial account balance so it can be displayed.
-    web3.eth.getAccounts(function(err, accs) {
-      if (err != null) {
-        alert("There was an error fetching your accounts.");
-        return;
-      }
-
-      if (accs.length == 0) {
-        alert("Couldn't get any accounts! Make sure your Ethereum client is configured correctly.");
-        return;
-      }
-
-      accounts = accs;
-      account = accounts[0];
-
-      self.refreshBalance();
-    });
-  },
-
-  setStatus: function(message) {
-    var status = document.getElementById("status");
-    status.innerHTML = message;
-  },
-
-  refreshBalance: function() {
-    var self = this;
-
-    var meta;
-    MetaCoin.deployed().then(function(instance) {
-      meta = instance;
-      return meta.getBalance.call(account, {from: account});
-    }).then(function(value) {
-      var balance_element = document.getElementById("balance");
-      balance_element.innerHTML = value.valueOf();
-    }).catch(function(e) {
-      console.log(e);
-      self.setStatus("Error getting balance; see log.");
-    });
-  },
-
-  sendCoin: function() {
-    var self = this;
-
-    var amount = parseInt(document.getElementById("amount").value);
-    var receiver = document.getElementById("receiver").value;
-
-    this.setStatus("Initiating transaction... (please wait)");
-
-    var meta;
-    MetaCoin.deployed().then(function(instance) {
-      meta = instance;
-      return meta.sendCoin(receiver, amount, {from: account});
-    }).then(function() {
-      self.setStatus("Transaction complete!");
-      self.refreshBalance();
-    }).catch(function(e) {
-      console.log(e);
-      self.setStatus("Error sending coin; see log.");
-    });
-  }
-};
+            $('button').on('click', (e) => {
+                let name = $('#candidate').val();
+                console.log(name);
+                voting.voteForCandidate.call(name);
+                let val = voting.totalVotesFor.call(name).toString();
+                console.log(val);
+                console.log(candidates[name]);
+                $('#' + candidates[name]).html('val');
+            })
+        });
+    },
+}
 
 window.addEventListener('load', function() {
   // Checking if Web3 has been injected by the browser (Mist/MetaMask)
@@ -100,3 +62,30 @@ window.addEventListener('load', function() {
 
   App.start();
 });
+
+// import Web3 from 'web3';
+// let web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
+// let abi = JSON.parse('[{"constant":false,"inputs":[{"name":"candidate","type":"bytes32"}],"name":"totalVotesFor","outputs":[{"name":"","type":"uint8"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"candidate","type":"bytes32"}],"name":"validCandidate","outputs":[{"name":"","type":"bool"}],"payable":false,"type":"function"},{"constant":true,"inputs":[{"name":"","type":"bytes32"}],"name":"votesReceived","outputs":[{"name":"","type":"uint8"}],"payable":false,"type":"function"},{"constant":true,"inputs":[{"name":"x","type":"bytes32"}],"name":"bytes32ToString","outputs":[{"name":"","type":"string"}],"payable":false,"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"candidateList","outputs":[{"name":"","type":"bytes32"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"candidate","type":"bytes32"}],"name":"voteForCandidate","outputs":[],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"contractOwner","outputs":[{"name":"","type":"address"}],"payable":false,"type":"function"},{"inputs":[{"name":"candidateNames","type":"bytes32[]"}],"payable":false,"type":"constructor"}]')
+// let VotingContract = web3.eth.contract(abi);
+// // In your nodejs console, execute contractInstance.address to get the address at which the contract is deployed and change the line below to use your deployed address
+// let contractInstance = VotingContract.at('0xce151642dd2ba55e5cc847cd39476e74de9ac813');
+// let candidates = {"Jose": "voteCandidate-1", "Etienne": "voteCandidate-2", "Nick": "voteCandidate-3"}
+
+// $('button').on('click', () => {
+//     let candidateName = $("#candidate").val();
+//     contractInstance.voteForCandidate(candidateName, {from: web3.eth.accounts[0]}, function() {
+//       let div_id = candidates[candidateName];
+//       console.log(contractInstance.totalVotesFor.call(candidateName).toString());
+//       $("#" + div_id).html(contractInstance.totalVotesFor.call(candidateName).toString());
+//     });
+// })
+
+// $(document).ready(function() {
+//   let candidateNames = Object.keys(candidates);
+//   for (var i = 0; i < candidateNames.length; i++) {
+//     let name = candidateNames[i];
+//     let val = contractInstance.totalVotesFor.call(name).toString();
+//     console.log(val);
+//     $("#" + candidates[name]).html(val);
+//   }
+// });
