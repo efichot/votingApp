@@ -43,7 +43,7 @@ window.App = {
                 console.log(val);
                 console.log(candidates[name]);
                 $('#' + candidates[name]).html('val');
-            })
+            });
         });
     },
 }
